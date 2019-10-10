@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Keyboard, ActivityIndicator } from 'react-native';
+import { Alert, Keyboard, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import api from '../../services/api';
@@ -46,20 +46,31 @@ export default class Main extends Component {
 
     this.setState({ loading: true });
 
-    const response = await api.get(`/users/${newUser}`);
+    if (
+      users.length > 0 &&
+      users.find(user => user.login.toLowerCase() === newUser.toLowerCase())
+    ) {
+      Alert.alert('Usuário já adicionado');
 
-    const data = {
-      name: response.data.name,
-      login: response.data.login,
-      bio: response.data.bio,
-      avatar: response.data.avatar_url,
-    };
+      this.setState({
+        loading: false,
+      });
+    } else {
+      const response = await api.get(`/users/${newUser}`);
 
-    this.setState({
-      users: [...users, data],
-      newUser: '',
-      loading: false,
-    });
+      const data = {
+        name: response.data.name,
+        login: response.data.login,
+        bio: response.data.bio,
+        avatar: response.data.avatar_url,
+      };
+
+      this.setState({
+        users: [...users, data],
+        newUser: '',
+        loading: false,
+      });
+    }
 
     Keyboard.dismiss();
   };
