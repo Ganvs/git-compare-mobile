@@ -30,22 +30,35 @@ export default class User extends Component {
 
   state = {
     stars: [],
-    loading: false,
+    loading: true,
+    page: 1,
   };
 
   async componentDidMount() {
+    this.loadRepositories();
+  }
+
+  loadRepositories = async (page = 1) => {
+    const { stars } = this.state;
     const { navigation } = this.props;
     const user = navigation.getParam('user');
 
-    this.setState({ loading: true });
-
-    const response = await api.get(`/users/${user.login}/starred`);
+    const response = await api.get(`/users/${user.login}/starred?page=${page}`);
 
     this.setState({
-      stars: response.data,
+      stars: page >= 2 ? [...stars, ...response.data] : response.data,
+      page,
       loading: false,
     });
-  }
+  };
+
+  loadMoreRepositories = () => {
+    const { page } = this.state;
+
+    const nextPage = page + 1;
+
+    this.loadRepositories(nextPage);
+  };
 
   render() {
     const { navigation } = this.props;
@@ -67,6 +80,8 @@ export default class User extends Component {
           <Stars
             data={stars}
             keyExtractor={star => String(star.id)}
+            onEndReachedThreshold={0.2}
+            onEndReached={this.loadMoreRepositories}
             renderItem={({ item }) => (
               <Starred>
                 <OwnerAvatar source={{ uri: item.owner.avatar_url }} />
